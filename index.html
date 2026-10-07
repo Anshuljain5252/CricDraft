@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>CricDraft</title>
+<style>
+:root{--bg:#071019;--panel:#101a29;--line:#26354a;--text:#f6f8fb;--muted:#94a3b8;--lime:#b8ff36;--cyan:#42d7ff;--danger:#ff5d73}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#152842,#071019 38%);color:var(--text);font-family:Inter,system-ui,Segoe UI,Arial;min-height:100vh}
+main{width:min(100%,500px);margin:auto;padding:18px 15px 40px}.brand{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.brand b{font-size:24px}.brand b span{color:var(--lime)}.live{font-size:11px;color:#ff7a8e;border:1px solid #ff5d7355;background:#ff5d7315;padding:6px 9px;border-radius:99px}
+.card{background:linear-gradient(180deg,#121d2d,#0d1623);border:1px solid var(--line);border-radius:20px;padding:16px;margin:12px 0;box-shadow:0 12px 30px #0005}
+h1{font-size:31px;line-height:1;margin:6px 0 10px}.eyebrow{color:var(--lime);font-size:11px;font-weight:900;letter-spacing:1.4px}.muted{color:var(--muted);font-size:12px;line-height:1.5}
+button,input,select{font:inherit}button{border:0;border-radius:12px;padding:12px 14px;font-weight:900;cursor:pointer}.primary{background:var(--lime);color:#091008;width:100%}.secondary{background:#17263b;color:white;border:1px solid #2c4261;width:100%}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.field{margin:9px 0}.field label{display:block;color:var(--muted);font-size:10px;font-weight:800;margin-bottom:5px;text-transform:uppercase}.field input,.field select{width:100%;background:#09111d;color:white;border:1px solid var(--line);border-radius:11px;padding:11px;outline:none}
+.status{font-size:12px;color:var(--muted);margin-top:9px;min-height:18px}.ok{color:var(--lime)}.err{color:var(--danger)}
+.people{display:flex;gap:7px;flex-wrap:wrap}.pill{padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:12px}.pill input{margin-right:6px}
+#draft,#result{display:none}.turn{text-align:center}.turnName{font-size:30px;font-weight:950}.timer{width:112px;height:112px;border:7px solid var(--lime);border-radius:50%;display:grid;place-items:center;margin:14px auto;font-size:28px;font-weight:950}
+.search{display:grid;grid-template-columns:1fr auto;gap:8px;position:relative}.search input{background:#09111d;color:white;border:1px solid var(--line);border-radius:11px;padding:12px}.search button{background:var(--cyan);color:#071019}
+.suggestions{position:absolute;top:48px;left:0;right:77px;background:#0a1320;border:1px solid #324b6f;border-radius:12px;overflow:hidden;z-index:5;box-shadow:0 12px 28px #0009}.suggestion{padding:10px 11px;border-top:1px solid #ffffff0d;cursor:pointer}.suggestion:first-child{border-top:0}.suggestion small{display:block;color:var(--muted);margin-top:2px}
+.order{display:flex;gap:6px;overflow:auto}.order span{white-space:nowrap;padding:7px 9px;border:1px solid var(--line);border-radius:9px;color:var(--muted);font-size:11px}.order .active{background:var(--lime);color:#071019;font-weight:900}
+.team{padding:9px 0;border-top:1px solid #ffffff0d}.team:first-child{border-top:0}.team b{font-size:13px}.picks{color:var(--muted);font-size:11px;margin-top:4px;line-height:1.5}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px 5px;border-top:1px solid #ffffff10;font-size:11px}th{color:var(--muted);font-size:9px;text-transform:uppercase}
+.winner{text-align:center;font-size:28px;font-weight:950}.trophy{text-align:center;font-size:45px}.verdict{padding:11px;background:#ffffff08;border:1px solid #ffffff12;border-radius:12px;font-size:13px;font-weight:800}
+</style>
+</head>
+<body><main>
+<div class="brand"><b>CRIC<span>DRAFT</span></b><div class="live">● LIVE DRAFT</div></div>
+
+<section id="setup">
+  <div class="card">
+    <div class="eyebrow">Fantastic XI • Local cricket draft</div>
+    <h1>Pick fast.<br>Know cricket.</h1>
+    <div class="muted">Test, ODI, T20I, IPL and T20I + IPL. ₹0 paid API cost.</div>
+  </div>
+
+  <div class="card">
+    <b>📊 Local cricket data</b>
+    <div class="muted" style="margin-top:7px">Downloads Cricsheet archives for all formats and builds your local player database. IPL covers the league from 2008 onward. Test/ODI records derived from Cricsheet are marked coverage-limited where older career matches are unavailable.</div>
+    <button class="secondary" style="margin-top:12px" onclick="refreshAll()">🏏 DOWNLOAD / REFRESH ALL FORMATS</button>
+    <div id="dataStatus" class="status">Checking local database…</div>
+  </div>
+
+  <div class="card">
+    <b>Round setup</b>
+    <div class="grid">
+      <div class="field"><label>Format</label><select id="format"><option>IPL</option><option>T20I</option><option>T20I + IPL</option><option>ODI</option><option>Test</option></select></div>
+      <div class="field"><label>Challenge</label><select id="category"><option>Strike Rate</option><option>Batting Average</option><option>Bowling Average</option><option>Sixes</option><option>Catches</option></select></div>
+      <div class="field"><label>Picks / player</label><select id="pickCount"><option>2</option><option selected>4</option><option>6</option></select></div>
+      <div class="field"><label>Chess clock</label><select id="minutes"><option>1</option><option>2</option><option selected>5</option><option>10</option></select></div>
+    </div>
+    <div class="field"><label>Players</label><div class="people" id="people"></div></div>
+    <button class="primary" onclick="startDraft()">START DRAFT</button>
+  </div>
+</section>
+
+<section id="draft">
+  <div class="card turn">
+    <div class="muted">CURRENT TURN</div>
+    <div class="turnName" id="turnName"></div>
+    <div class="timer" id="timer">05:00</div>
+    <div class="search">
+      <input id="playerInput" placeholder="Type 3+ letters: vai, sur, koh, ABD, SKY…" autocomplete="off">
+      <button onclick="lockPick()">LOCK</button>
+      <div class="suggestions" id="suggestions" hidden></div>
+    </div>
+    <div id="pickStatus" class="status"></div>
+  </div>
+  <div class="card"><b>Draft order</b><div class="order" id="order" style="margin-top:10px"></div></div>
+  <div class="card"><b>Teams</b><div id="teams"></div></div>
+</section>
+
+<section id="result">
+  <div class="card">
+    <div class="trophy">🏆</div>
+    <div class="winner" id="winner"></div>
+    <div id="meta" class="muted" style="text-align:center;margin-top:5px"></div>
+    <div class="verdict" id="verdict" style="margin-top:12px"></div>
+  </div>
+  <div class="card"><b>Selected players</b><div id="resultTable"></div></div>
+  <button class="primary" onclick="location.reload()">NEW ROUND</button>
+</section>
+
+<script>
+const defaults=['Anshul','Manish','Tikki','Khara','Manoj','Anil','Antu'];
+people.innerHTML=defaults.map((n,i)=>'<label class="pill"><input type="checkbox" value="'+n+'" '+(i<3?'checked':'')+'>'+n+'</label>').join('');
+let S={players:[],people:[],picks:{},turn:0,pickCount:4,remaining:{},timer:null,selected:null};
+
+function esc(s){return String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+async function api(url,opt){const r=await fetch(url,opt);const j=await r.json();if(!r.ok)throw new Error(j.error||'Request failed');return j}
+async function health(){try{const h=await api('/api/health');dataStatus.innerHTML=h.rows?'<span class="ok">Ready • '+h.rows+' stat rows • ₹0 API</span>':'No local stats yet. Click refresh.';}catch(e){dataStatus.textContent=e.message}}
+async function refreshAll(){
+  dataStatus.textContent='Downloading and processing Test + ODI + T20I + IPL… keep this page open.';
+  try{const r=await api('/api/data/refresh-all',{method:'POST'});dataStatus.innerHTML='<span class="ok">Done • '+r.rows+' stat rows • '+r.unique_players+' unique players</span>';await loadPlayers();}
+  catch(e){dataStatus.innerHTML='<span class="err">'+esc(e.message)+'</span>'}
+}
+async function loadPlayers(){try{const r=await api('/api/health');if(r.rows){} }catch{}}
+function startDraft(){
+  S.people=[...document.querySelectorAll('#people input:checked')].map(x=>x.value);if(S.people.length<2)return alert('Select at least 2 players.');
+  S.pickCount=+pickCount.value;S.picks=Object.fromEntries(S.people.map(x=>[x,[]]));S.remaining=Object.fromEntries(S.people.map(x=>[x,+minutes.value*60]));S.turn=0;
+  setup.style.display='none';draft.style.display='block';render();tickStart();playerInput.focus();
+}
+function current(){return S.people[S.turn%S.people.length]}
+function render(){
+  turnName.textContent=current();const sec=S.remaining[current()];timer.textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+  order.innerHTML=S.people.map((p,i)=>'<span class="'+(i===S.turn%S.people.length?'active':'')+'">'+esc(p)+'</span>').join('');
+  teams.innerHTML=S.people.map(p=>'<div class="team"><b>'+esc(p)+'</b><div class="picks">'+(S.picks[p].map(x=>esc(x.name)).join(' • ')||'No picks yet')+'</div></div>').join('');
+}
+function tickStart(){clearInterval(S.timer);S.timer=setInterval(()=>{const p=current();if(S.remaining[p]>0)S.remaining[p]--;render();if(S.remaining[p]===0)advance();},1000)}
+async function suggest(){
+  const q=playerInput.value.trim();if(q.length<2){suggestions.hidden=true;return}
+  try{
+    const r=await api('/api/players?q='+encodeURIComponent(q)+'&format='+encodeURIComponent(format.value));
+    const picked=new Set(Object.values(S.picks).flat().map(x=>x.id));
+    const list=r.players.filter(x=>!picked.has(x.id));
+    suggestions.innerHTML=list.map(x=>'<div class="suggestion" data-id="'+esc(x.id)+'" data-name="'+esc(x.name)+'"><b>'+esc(x.name)+'</b><small>'+esc([...x.formats].join(' / '))+'</small></div>').join('');
+    suggestions.hidden=!list.length;
+    [...suggestions.children].forEach(el=>el.onclick=()=>{S.selected={id:el.dataset.id,name:el.dataset.name};playerInput.value=el.dataset.name;suggestions.hidden=true;});
+  }catch{}
+}
+playerInput.addEventListener('input',()=>{S.selected=null;suggest()});
+playerInput.addEventListener('keydown',e=>{if(e.key==='Enter')lockPick()});
+
+async function lockPick(){
+  const q=playerInput.value.trim();if(q.length<2)return;
+  let chosen=S.selected;
+  if(!chosen){const r=await api('/api/players?q='+encodeURIComponent(q)+'&format='+encodeURIComponent(format.value));if(!r.players.length){pickStatus.textContent='No player found.';return}chosen=r.players[0];}
+  const already=Object.values(S.picks).flat().some(x=>x.id===chosen.id);if(already){pickStatus.textContent='Duplicate player blocked.';return}
+  S.picks[current()].push(chosen);playerInput.value='';S.selected=null;suggestions.hidden=true;pickStatus.textContent='Locked: '+chosen.name;advance();
+}
+function advance(){
+  if(S.people.every(p=>S.picks[p].length>=S.pickCount)){finish();return}
+  do{S.turn=(S.turn+1)%S.people.length}while(S.picks[current()].length>=S.pickCount||S.remaining[current()]<=0);
+  render();playerInput.focus();
+}
+async function finish(){
+  clearInterval(S.timer);draft.style.display='none';result.style.display='block';
+  const payload={format:format.value,category:category.value,teams:S.people.map(name=>({name,players:S.picks[name].map(p=>({entered_name:p.name,suggested_name:p.name}))}))};
+  try{
+    const r=await api('/api/analyze',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+    winner.textContent=(r.calculation.winner||'NO WINNER')+(r.calculation.winner?' WINS':'');
+    meta.textContent=format.value+' • '+category.value;
+    verdict.textContent=r.one_liner;
+    const rows=r.calculation.team_ranking.flatMap(t=>t.players.map(p=>'<tr><td><b>'+esc(p.team)+'</b></td><td>'+esc(p.entered_name)+'</td><td>'+esc(p.corrected_name)+'</td><td>'+((p.stat_value??'N/A'))+'</td></tr>')).join('');
+    resultTable.innerHTML='<table><thead><tr><th>Team</th><th>Entered</th><th>Matched</th><th>Stat</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  }catch(e){winner.textContent='RESULT ERROR';verdict.textContent=e.message;}
+}
+health();
+</script>
+</main></body></html>
