@@ -1,8 +1,12 @@
 {
-  "name":"cricdraft-local",
-  "version":"5.0.0",
-  "private":true,
-  "type":"module",
-  "scripts":{"start":"node server.mjs"},
-  "engines":{"node":">=20.6"}
+  "name": "cricdraft-local",
+  "version": "5.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=20.6"
+  }
 }
